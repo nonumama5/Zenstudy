@@ -19,34 +19,37 @@ def generate_quiz():
     data = request.get_json()
     topic = data.get("topic")
 
-    prompt = f"""
-    Generate 5 multiple-choice quiz questions for the topic "{topic}" in the following JSON format:
-    {{
-        "quiz": [
-            {{
-                "question": "What is the capital of France?",
-                "options": ["A. Paris", "B. London", "C. Rome", "D. Berlin"],
-                "answer": "A"
-            }},
-            ...
-        ]
-    }}
-    Only return valid JSON. Do not include explanations or any other text before or after.
-    """
+    # Route 1: Just Questions
+@app.route('/generate-questions', methods=['POST'])
+def generate_questions():
+    data = request.get_json()
+    topic = data.get("topic")
+    
+    prompt = f"Give me 10 fun general knowledge questions (without answers) for the topic: {topic}. Number them."
+    
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    questions = response['choices'][0]['message']['content']
+    return jsonify({"questions": questions})
+
+# Route 2: Questions + One-Word Answers
+@app.route('/generate-answers', methods=['POST'])
+def generate_answers():
+    data = request.get_json()
+    topic = data.get("topic")
+
+    prompt = f"Give me 10 general knowledge questions with one-word answers for the topic: {topic}. Return as a JSON list like: {{'question': '...', 'answer': '...'}}."
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}]
     )
 
-    # Parse and return JSON
-    try:
-        import json
-        raw_output = response['choices'][0]['message']['content']
-        quiz_data = json.loads(raw_output)
-        return jsonify(quiz_data)
-    except Exception as e:
-        return jsonify({"error": "Failed to parse quiz response", "details": str(e)}) 
+    qa_pairs = response['choices'][0]['message']['content']
+    return jsonify({"quiz": qa_pairs})
 
 #  Generate Mind Map from topic
 @app.route('/generate-mindmap', methods=['POST'])
