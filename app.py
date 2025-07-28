@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import openai
 import os
 
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
@@ -18,14 +19,34 @@ def generate_quiz():
     data = request.get_json()
     topic = data.get("topic")
 
-    prompt = f"Create 20 multiple choice quiz questions with 4 options and answers for the topic: {topic}."
+    prompt = f"""
+    Generate 5 multiple-choice quiz questions for the topic "{topic}" in the following JSON format:
+    {{
+        "quiz": [
+            {{
+                "question": "What is the capital of France?",
+                "options": ["A. Paris", "B. London", "C. Rome", "D. Berlin"],
+                "answer": "A"
+            }},
+            ...
+        ]
+    }}
+    Only return valid JSON. Do not include explanations or any other text before or after.
+    """
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}]
     )
-    quiz_output = response['choices'][0]['message']['content']
-    return jsonify({"quiz": quiz_output})
+
+    # Parse and return JSON
+    try:
+        import json
+        raw_output = response['choices'][0]['message']['content']
+        quiz_data = json.loads(raw_output)
+        return jsonify(quiz_data)
+    except Exception as e:
+        return jsonify({"error": "Failed to parse quiz response", "details": str(e)}) 
 
 #  Generate Mind Map from topic
 @app.route('/generate-mindmap', methods=['POST'])
