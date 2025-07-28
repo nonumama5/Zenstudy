@@ -12,3 +12,8 @@ This is the backend server for **ZenStudy**, a cozy AI-powered study buddy app b
 - Python (Flask)
 - OpenAI API
 - Deployed on Render
+## 🚫 License
+
+This is a personal innovation project built by Celina Parida for educational and demonstration purposes.  
+All rights reserved.  
+You may not copy, use, modify, or distribute any part of this code without explicit permission.
